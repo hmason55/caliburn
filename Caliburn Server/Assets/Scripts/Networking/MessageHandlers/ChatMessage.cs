@@ -1,13 +1,23 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using Mirror;
 
 public class ChatMessage : MessageBase {
 
-    public int connectionId;
+    public string playerName;
     public string target;
     public string message;
+
+    public override void Deserialize(NetworkReader reader) {
+        playerName = reader.ReadString();
+        target = reader.ReadString();
+        message = reader.ReadString();
+    }
+
+    public override void Serialize(NetworkWriter writer) {
+        writer.WriteString(playerName);
+        writer.WriteString(target);
+        writer.WriteString(message);
+    }
 
     public void HandleMessage() {
 

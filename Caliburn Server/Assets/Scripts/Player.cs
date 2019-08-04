@@ -27,18 +27,11 @@ public class Player : NetworkBehaviour {
                 //CmdTakeDamage(10);
             }
         }
-
-        
-        if(Input.GetKeyDown(KeyCode.A)) {
-            Debug.Log("Actual: " + NetworkClient.connection.connectionId);
-            Debug.Log("connectionId: " + connectionToServer.connectionId);
-        }
     }
 
     public override void OnStartLocalPlayer() {
         spriteRenderer.color = Color.blue;
     }
-
 
     /*
     [Command]

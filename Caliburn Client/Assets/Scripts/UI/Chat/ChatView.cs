@@ -8,6 +8,7 @@ public class ChatView : MonoBehaviour {
         string msg = chatMessageInput.text;
 
         if(!IsNullOrWhiteSpace(msg)) {
+            Debug.Log(msg);
             ChatModel newChatMessage = new ChatModel {
                 message = msg
             };

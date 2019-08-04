@@ -20,9 +20,9 @@ public class ChatController : MonoBehaviour {
         _instance = this;
     }
 
-    public void CreateNewMessage(int connectionId, string newMessage) {
+    public void CreateNewMessage(string playerName, string newMessage) {
         GameObject message = Instantiate(messagePrefab) as GameObject;
-        message.GetComponent<Text>().text = connectionId + ": " + newMessage;
+        message.GetComponent<Text>().text = playerName + ": " + newMessage;
         message.transform.SetParent(messageContainer);
     }
 }

@@ -3,7 +3,7 @@ using Mirror;
 
 public class ChatMessage : MessageBase {
 
-    public int connectionId;
+    public string playerName;
     public string target;
     public string message;
 
@@ -20,7 +20,7 @@ public class ChatMessage : MessageBase {
     public void HandleMessageReceived() {
         switch(target) {
             case "World":
-                ChatController.Instance.CreateNewMessage(connectionId, message);
+                ChatController.Instance.CreateNewMessage(playerName, message);
             break;
         }
     }

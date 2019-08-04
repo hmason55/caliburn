@@ -10,5 +10,9 @@ public class PlayerInfo : MonoSingleton<PlayerInfo> {
         DontDestroyOnLoad(this.gameObject);
     }
 
-    //public string PlayerName { get; set; }
+    public GameObject playerPrefab;
+    public string PlayerName;
+    public string ipAddress;
+    
+    
 }

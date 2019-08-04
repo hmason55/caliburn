@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Networking;
 
-public class LoginManager : MonoBehaviour {
+public class LoginManager : MonoSingleton<LoginManager> {
 
     public Client client;
     const string DB_SIGNUP_URL = "http://localhost/caliburn/signup.php";
@@ -29,15 +29,18 @@ public class LoginManager : MonoBehaviour {
     public Button submitLoginButton;
 
     void Awake() {
-        OnShowButtonGroup();
+        OnHideButtonGroup();
         OnHideLoginGroup();
         OnHideSignupGroup();
+        backButton.gameObject.SetActive(false);
     }
 
     void Update() {
         if(Mirror.NetworkClient.active) {
+            submitSignupButton.interactable = true;
             submitLoginButton.interactable = true;
         } else {
+            submitSignupButton.interactable = false;
             submitLoginButton.interactable = false;
         }
     }
@@ -174,6 +177,4 @@ public class LoginManager : MonoBehaviour {
         OnShowLoginGroup();
         yield break;
     }
-
-
 }

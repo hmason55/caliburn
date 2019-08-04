@@ -6,7 +6,7 @@ public class ChatModel {
     public void SendMessage() {
 
         ChatMessage msg = new ChatMessage {
-            connectionId = NetworkClient.connection.connectionId,
+            playerName = PlayerInfo.Instance.PlayerName,
             target = "World",
             message = this.message,
         };
