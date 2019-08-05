@@ -36,6 +36,7 @@ public class ProcessLogin : MonoBehaviour {
 
             if (loginRequest.isNetworkError) {
                 Debug.LogWarning("Error: " + loginRequest.error);
+                Debug.Log("Login server offline.");
             } else {
                 // Database server is up
                 string result = loginRequest.downloadHandler.text;

@@ -17,7 +17,9 @@ public class ChatMessage : MessageBase {
         }
     }
 
-    public void HandleMessageReceived() {
+    public void HandleMessageReceived(NetworkConnection connection) {
+        if(connection.playerController == null) {return;} // not logged in yet.
+        
         switch(target) {
             case "World":
                 ChatController.Instance.CreateNewMessage(playerName, message);

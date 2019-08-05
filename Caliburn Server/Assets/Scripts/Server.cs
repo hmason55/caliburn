@@ -53,14 +53,15 @@ public class Server : NetworkManager {
 
     void OnLoginRequestReceived(NetworkConnection connection, UserLoginRequest netMsg) {
         ProcessLogin.Instance.Request(netMsg.username, netMsg.password, (requestCode) => {
-            
+            netMsg.requestCode = requestCode;
+
             switch(requestCode) {
                 case 0:
                     if(!connectedPlayers.ContainsValue(netMsg.username)) {
-                        netMsg.requestCode = requestCode;
                         netMsg.connectionId = connection.connectionId;
                         connectedPlayers.Add(connection, netMsg.username);
                         Debug.Log(netMsg.username + " logged in.");
+                        
                     } else {
                         netMsg.requestCode = 5;
                     }
@@ -68,7 +69,6 @@ public class Server : NetworkManager {
             }
             
             Debug.Log("Login request completed with request code: " + requestCode);
-
             NetworkServer.SendToClient<UserLoginRequest>(connection.connectionId, netMsg);
         });
     }
@@ -82,10 +82,23 @@ public class Server : NetworkManager {
     }
 
     public override void OnServerAddPlayer(NetworkConnection connection, AddPlayerMessage netMsg) {
+
         GameObject player = Instantiate(playerPrefab) as GameObject;
         player.transform.position = new Vector3(Random.Range(-3f, 3f) , 0f, 0f);
-        
+
+        PlayerView playerView = player.GetComponent<PlayerView>();
+        playerView.nameplate.text = connectedPlayers[connection];
+
+
         NetworkServer.AddPlayerForConnection(connection, player);
+
+        // Set nameplate
+        PlayerNameplateMessage nameplateMessage = new PlayerNameplateMessage {
+            networkId = player.GetComponent<NetworkIdentity>().netId,
+            username = connectedPlayers[connection]
+        };
+
+        nameplateMessage.HandleRequest();
     }
 
     void OnChatMessageReceived(NetworkConnection connection, ChatMessage netMsg) {
@@ -104,12 +117,8 @@ public class Server : NetworkManager {
     }
 
     void OnPlayerMoveToRequestReceived(NetworkConnection connection, PlayerMoveToRequest netMsg) {
-        Debug.Log("Movement request received.");
-        //connection.playerController.transform.position += (Vector3)netMsg.position;
-        PlayerView playerView = connection.playerController.GetComponent<PlayerView>();
-        playerView.destination = (Vector3)netMsg.position;
-        //netMsg.
-        netMsg.HandleRequestReceived();
+        if(!NetworkIdentity.spawned.ContainsKey(netMsg.networkId)) {return;}
+        netMsg.HandleRequestReceived(NetworkIdentity.spawned[netMsg.networkId]);
     }
 
     #region Utility

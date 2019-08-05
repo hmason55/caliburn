@@ -10,6 +10,7 @@ public class Client : NetworkManager {
     public LoginManager loginManager;
     
 
+
     public override void Start() {
         Application.runInBackground = true;
         StartCoroutine(AttemptConnection());
@@ -54,7 +55,6 @@ public class Client : NetworkManager {
             if(Hashing.VerifyMd5Hash(md5Hash, passwordEncryption, hash)) {
                 user.password = hash;
                 NetworkClient.Send<UserLoginRequest>(user);
-                Debug.Log(hash);
             } else {
                 Debug.Log("Hashes are different.");
             }
@@ -88,6 +88,9 @@ public class Client : NetworkManager {
         NetworkClient.RegisterHandler<UserLoginRequest>(OnLoginRequestReceived);
         NetworkClient.RegisterHandler<UserSignupRequest>(OnSignupRequestReceived);
         NetworkClient.RegisterHandler<ChatMessage>(OnChatMessageReceived);
+        NetworkClient.RegisterHandler<PlayerMoveToRequest>(OnPlayerMoveToRequestReceived);
+        NetworkClient.RegisterHandler<PlayerPositionMessage>(OnPlayerPositionMessageReceived);
+        NetworkClient.RegisterHandler<PlayerNameplateMessage>(OnPlayerNameplateMessageReceived);
     }
 
     void OnClientConnected(NetworkConnection connection, ConnectMessage netMsg) {
@@ -96,13 +99,14 @@ public class Client : NetworkManager {
     }
 
     void OnClientDisconnected(NetworkConnection connection, DisconnectMessage netMsg) {
-        Debug.Log("Disconnected from server");        
+        Debug.Log("Disconnected from server");
+        DestroyImmediate(this.gameObject);
+        SceneManager.LoadScene("Main Menu");
     }
 
     void OnLoginRequestReceived(NetworkConnection connection, UserLoginRequest netMsg) {
         if(connection.connectionId == 0) {
-            
-            //NetworkClient.connection.connectionId = netMsg.connectionId;
+            NetworkClient.connection.connectionId = netMsg.connectionId;
         }
 
         Debug.Log("Received reply from server with request code: " + netMsg.requestCode);
@@ -153,9 +157,22 @@ public class Client : NetworkManager {
     }
 
     void OnChatMessageReceived(NetworkConnection connection, ChatMessage netMsg) {
-        if(connection.playerController == null) {return;} // not logged in yet.
-        
-        netMsg.HandleMessageReceived();
+        netMsg.HandleMessageReceived(connection);
+    }
+
+    void OnPlayerMoveToRequestReceived(NetworkConnection connection, PlayerMoveToRequest netMsg) {
+        if(!NetworkIdentity.spawned.ContainsKey(netMsg.networkId)) {return;}
+        netMsg.HandleRequestReceived(NetworkIdentity.spawned[netMsg.networkId]);
+    }
+
+    void OnPlayerPositionMessageReceived(NetworkConnection connection, PlayerPositionMessage netMsg) {
+        if(!NetworkIdentity.spawned.ContainsKey(netMsg.networkId)) {return;}
+        netMsg.HandleRequestReceived(NetworkIdentity.spawned[netMsg.networkId]);
+    }
+
+    void OnPlayerNameplateMessageReceived(NetworkConnection connection, PlayerNameplateMessage netMsg) {
+        if(!NetworkIdentity.spawned.ContainsKey(netMsg.networkId)) {return;}
+        netMsg.HandleRequestReceived(NetworkIdentity.spawned[netMsg.networkId]);
     }
 
     #region Utility

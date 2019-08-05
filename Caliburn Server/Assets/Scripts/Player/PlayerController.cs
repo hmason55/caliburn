@@ -10,13 +10,12 @@ public class PlayerController : MonoSingleton<PlayerController> {
 
     void Update() {
         if(Input.GetKeyDown(KeyCode.D)) {
-            MoveTo(new Vector2(transform.position.x + 1f, transform.position.y));
+            //MoveTo(new Vector2(transform.position.x + 1f, transform.position.y));
         }
     }
 
     void MoveTo(Vector2 destination) {
-        PlayerMoveToRequest moveTo = new PlayerMoveToRequest { position = destination };
-        
-        moveTo.HandleRequest();
+       // PlayerMoveToRequest moveTo = new PlayerMoveToRequest { position = destination };
+        //moveTo.HandleRequest();
     }
 }
