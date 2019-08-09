@@ -11,7 +11,11 @@ public class PlayerPositionMessage : MessageBase {
 
     public void HandleRequestReceived(NetworkIdentity identity) {
         // Client stuff
+        if(identity == null) {return;}
+
         PlayerView playerView = identity.GetComponent<PlayerView>();
-        playerView.transform.position = Vector2.Lerp((Vector2)playerView.transform.position, position, Time.deltaTime * 3f);
+        if(playerView == null) {return;}
+
+        playerView.actualPosition = position;//Vector2.Lerp((Vector2)playerView.transform.position, position, Time.deltaTime * 5f);
     }
 }

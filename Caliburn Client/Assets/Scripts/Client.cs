@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using System.Security.Cryptography;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Mirror;
@@ -37,7 +38,7 @@ public class Client : NetworkManager {
     }
 
     void Connect() {
-        Debug.Log("Connecting to server...");
+        Debug.Log("Connecting...");
         NetworkClient.Connect("localhost");
         RegisterHandlers();
     }
@@ -91,15 +92,19 @@ public class Client : NetworkManager {
         NetworkClient.RegisterHandler<PlayerMoveToRequest>(OnPlayerMoveToRequestReceived);
         NetworkClient.RegisterHandler<PlayerPositionMessage>(OnPlayerPositionMessageReceived);
         NetworkClient.RegisterHandler<PlayerNameplateMessage>(OnPlayerNameplateMessageReceived);
+        NetworkClient.RegisterHandler<PlayerDataSyncMessage>(OnPlayerDataSyncMessageReceived);
+        NetworkClient.RegisterHandler<GrowableDataRequest>(OnGrowableDataRequestReceived);
+        //NetworkClient.RegisterHandler<PlayerNameplateSyncRequest>;
+        //NetworkClient.RegisterHandler<SpawnPrefabMessage>(OnSpawnPrefabMessageReceived);
     }
 
     void OnClientConnected(NetworkConnection connection, ConnectMessage netMsg) {
-        Debug.Log("Connected to server");
+        Debug.Log("Connected to server.");
         LoginManager.Instance.OnShowButtonGroup();
     }
 
     void OnClientDisconnected(NetworkConnection connection, DisconnectMessage netMsg) {
-        Debug.Log("Disconnected from server");
+        Debug.Log("Disconnected from server.");
         DestroyImmediate(this.gameObject);
         SceneManager.LoadScene("Main Menu");
     }
@@ -117,7 +122,12 @@ public class Client : NetworkManager {
                 PlayerInfo.Instance.PlayerName = netMsg.username;
                 PlayerInfo.Instance.ipAddress = NetworkClient.connection.address;
                 ClientScene.AddPlayer(NetworkClient.connection);
+                
                 SceneManager.LoadScene("World");
+
+                PlayerDataSyncMessage playerDataSync = new PlayerDataSyncMessage {};
+                playerDataSync.HandleRequest(connection);
+                Debug.Log("Requesting player data...");
             break;
 
             case 1:
@@ -173,6 +183,20 @@ public class Client : NetworkManager {
     void OnPlayerNameplateMessageReceived(NetworkConnection connection, PlayerNameplateMessage netMsg) {
         if(!NetworkIdentity.spawned.ContainsKey(netMsg.networkId)) {return;}
         netMsg.HandleRequestReceived(NetworkIdentity.spawned[netMsg.networkId]);
+    }
+    
+    void OnPlayerDataSyncMessageReceived(NetworkConnection connection, PlayerDataSyncMessage netMsg) {
+        if(!NetworkIdentity.spawned.ContainsKey(netMsg.networkId)) {return;}
+        netMsg.HandleRequestReceived();
+    }
+
+    void OnGrowableDataRequestReceived(NetworkConnection connection, GrowableDataRequest netMsg) {
+        if(!NetworkIdentity.spawned.ContainsKey(netMsg.networkId)) {return;}
+        netMsg.HandleRequestReceived();
+    }
+
+    void OnSpawnGrowable() {
+        Debug.Log("Spawned!");
     }
 
     #region Utility

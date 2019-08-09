@@ -4,10 +4,10 @@ using Mirror;
 using TMPro;
 
 public class PlayerView : MonoBehaviour {
+    public PlayerData playerData;
     public Vector2 destination;
     public TextMeshPro nameplate;
     public SpriteRenderer spriteRenderer;
-    public Animator animator;
     float deadzone = 0.25f;
     float minMovement = 1.25f;
     float speed = 5.0f;
@@ -15,23 +15,21 @@ public class PlayerView : MonoBehaviour {
     float tickDelay = 0.1f;
 
     NetworkIdentity identity;
+    Rigidbody2D rb;
 
     void Start() {
         identity = GetComponent<NetworkIdentity>();
+        rb = GetComponent<Rigidbody2D>();
         StartCoroutine(Sync());
-    }
-
-    public void MoveTo(Vector2 destination) {
-        
     }
 
     void Update() {
         if(destination != (Vector2)transform.position) {
             Vector2 heading = new Vector2(destination.x - transform.position.x, destination.y - transform.position.y);
             if(heading.magnitude > deadzone && destination != (Vector2)transform.position) {
-                transform.GetComponent<Rigidbody2D>().velocity = heading.normalized * speed;
+                rb.velocity = heading.normalized * speed;
             } else {
-                transform.GetComponent<Rigidbody2D>().velocity = Vector2.zero;
+                rb.velocity = Vector2.zero;
                 destination = transform.position;
             }
         }

@@ -14,19 +14,34 @@ public class Server : NetworkManager {
         }
     }
 
-    public Dictionary<NetworkConnection, string> connectedPlayers;
-    public Dictionary<uint, NetworkIdentity> playerIds;
+    public Dictionary<NetworkConnection, string> usernamesByConnection;
+    public Dictionary<uint, PlayerData> playerDataByNetId;
+    public Dictionary<uint, GrowableData> growableDataByNetId;
+
+    public override void Awake() {
+        _instance = this;
+        base.Awake();
+    }
 
     public override void Start() {
+
         Application.runInBackground = true;
         Initialize();
     }
 
+    void Update() {
+        if(Input.GetKeyDown(KeyCode.Space)) {
+        }
+    }
+
     void Initialize() {
-        connectedPlayers = new Dictionary<NetworkConnection, string>();
+        usernamesByConnection = new Dictionary<NetworkConnection, string>();
+        playerDataByNetId = new Dictionary<uint, PlayerData>();
+        growableDataByNetId = new Dictionary<uint, GrowableData>();
         NetworkServer.Listen(64);
         RegisterHandlers();
-    }   
+        SpawnGrowables();
+    } 
 
     void RegisterHandlers() {
         NetworkServer.RegisterHandler<ConnectMessage>(OnClientConnected);
@@ -36,6 +51,36 @@ public class Server : NetworkManager {
         NetworkServer.RegisterHandler<AddPlayerMessage>(OnServerAddPlayer);
         NetworkServer.RegisterHandler<ChatMessage>(OnChatMessageReceived);
         NetworkServer.RegisterHandler<PlayerMoveToRequest>(OnPlayerMoveToRequestReceived);
+        NetworkServer.RegisterHandler<PlayerDataSyncMessage>(OnPlayerDataSyncMessageReceived);
+        NetworkServer.RegisterHandler<PlayerSpawnGrowableRequest>(OnPlayerSpawnGrowableRequestReceived);
+        NetworkServer.RegisterHandler<PlayerUnSpawnGrowableRequest>(OnPlayerUnSpawnGrowableRequestReceived);
+        NetworkServer.RegisterHandler<GrowableDataRequest>(OnGrowableDataRequestReceived);
+        //NetworkServer.RegisterSpawn
+    }
+
+    void SpawnGrowables() {
+        ProcessGrowable.Instance.LoadRequest((requestCode) => {
+            
+            // Do other stuff after spawning growables.
+        });
+    }
+
+    public void SpawnObject(GameObject prefab, Vector3 position) {
+        GameObject go = Instantiate(prefab, position, Quaternion.identity) as GameObject;
+        System.Guid prefabAssetId = go.GetComponent<NetworkIdentity>().assetId;
+        ClientScene.RegisterSpawnHandler(prefabAssetId, OnSpawnPrefab, OnUnSpawnPrefab);
+        NetworkServer.Spawn(go, prefabAssetId);
+        //ProcessGrowable.Instance.SpawnRequest("username", 1, Vector2.zero, null);
+
+        //if(NetworkIdentity.spawned.ContainsKey[identity.])
+    }
+
+    public GameObject OnSpawnPrefab(Vector3 position, System.Guid assetId) {
+        return Instantiate(Growables.Instance.plants[0], position, Quaternion.identity);
+    }
+
+    public void OnUnSpawnPrefab(GameObject spawned) {
+        Destroy(spawned);
     }
 
     void OnClientConnected(NetworkConnection connection, ConnectMessage netMsg) {
@@ -44,10 +89,13 @@ public class Server : NetworkManager {
 
     void OnClientDisconnected(NetworkConnection connection, DisconnectMessage netMsg) {
         Debug.Log("Client disconnected from server");
-        if(connectedPlayers.ContainsKey(connection)) {
+        if(usernamesByConnection.ContainsKey(connection)) {
+            uint netId = connection.playerController.netId;
+            playerDataByNetId.Remove(netId);
+
             NetworkServer.DestroyPlayerForConnection(connection);
-            Debug.Log(connectedPlayers[connection] + " logged out.");
-            connectedPlayers.Remove(connection);
+            Debug.Log(usernamesByConnection[connection] + " logged out.");
+            usernamesByConnection.Remove(connection);
         }
     }
 
@@ -57,9 +105,9 @@ public class Server : NetworkManager {
 
             switch(requestCode) {
                 case 0:
-                    if(!connectedPlayers.ContainsValue(netMsg.username)) {
+                    if(!usernamesByConnection.ContainsValue(netMsg.username)) {
                         netMsg.connectionId = connection.connectionId;
-                        connectedPlayers.Add(connection, netMsg.username);
+                        usernamesByConnection.Add(connection, netMsg.username);
                         Debug.Log(netMsg.username + " logged in.");
                         
                     } else {
@@ -85,20 +133,31 @@ public class Server : NetworkManager {
 
         GameObject player = Instantiate(playerPrefab) as GameObject;
         player.transform.position = new Vector3(Random.Range(-3f, 3f) , 0f, 0f);
-
-        PlayerView playerView = player.GetComponent<PlayerView>();
-        playerView.nameplate.text = connectedPlayers[connection];
-
-
         NetworkServer.AddPlayerForConnection(connection, player);
 
-        // Set nameplate
-        PlayerNameplateMessage nameplateMessage = new PlayerNameplateMessage {
-            networkId = player.GetComponent<NetworkIdentity>().netId,
-            username = connectedPlayers[connection]
+        PlayerData playerData = new PlayerData {
+            networkId = connection.playerController.netId,
+            connectionId = connection.connectionId,
+            username = usernamesByConnection[connection],
+            ipAddress = "",
+            position = (Vector2)player.transform.position,
+            destination = (Vector2)player.transform.position
         };
 
-        nameplateMessage.HandleRequest();
+        PlayerView playerView = player.GetComponent<PlayerView>();
+        playerView.playerData = playerData;
+        playerDataByNetId.Add(playerData.networkId, playerData);
+        
+        PlayerDataSyncMessage playerDataMessage = new PlayerDataSyncMessage {
+            networkId = playerData.networkId,
+            connectionId = playerData.connectionId,
+            username = playerData.username,
+            ipAddress = playerData.ipAddress,
+            position = playerData.position,
+            destination = playerData.destination
+        };
+
+        playerDataMessage.HandleRequest();
     }
 
     void OnChatMessageReceived(NetworkConnection connection, ChatMessage netMsg) {
@@ -118,7 +177,45 @@ public class Server : NetworkManager {
 
     void OnPlayerMoveToRequestReceived(NetworkConnection connection, PlayerMoveToRequest netMsg) {
         if(!NetworkIdentity.spawned.ContainsKey(netMsg.networkId)) {return;}
+        if(!playerDataByNetId.ContainsKey(netMsg.networkId)) {return;}
         netMsg.HandleRequestReceived(NetworkIdentity.spawned[netMsg.networkId]);
+        //Debug.Log(netMsg.destination);
+        playerDataByNetId[netMsg.networkId].destination = netMsg.destination;
+    }
+
+    void OnPlayerDataSyncMessageReceived(NetworkConnection connection, PlayerDataSyncMessage netMsg) {
+        //Debug.Log("PlayerData sync request received.");
+        //Debug.Log(playerDataByNetId.Count);
+        foreach(KeyValuePair<uint, PlayerData>  playerData in playerDataByNetId) {
+            
+            PlayerView playerView = NetworkIdentity.spawned[playerData.Key].GetComponent<PlayerView>();
+
+            PlayerDataSyncMessage playerDataMessage = new PlayerDataSyncMessage {
+                networkId = playerData.Key,
+                connectionId = playerData.Value.connectionId,
+                username = playerData.Value.username,
+                ipAddress = playerData.Value.ipAddress,
+                position = (Vector2)playerView.transform.position,
+                destination = playerData.Value.destination,
+            };
+            playerDataMessage.HandleRequestReceived(connection);
+        }
+    }
+
+    public void OnPlayerSpawnGrowableRequestReceived(NetworkConnection connection, PlayerSpawnGrowableRequest netMsg) {
+        if(!usernamesByConnection.ContainsKey(connection)) {return;}
+        netMsg.ownerId = usernamesByConnection[connection];
+        netMsg.HandleRequestReceived();
+    }
+
+    public void OnPlayerUnSpawnGrowableRequestReceived(NetworkConnection connection, PlayerUnSpawnGrowableRequest netMsg) {
+        if(!usernamesByConnection.ContainsKey(connection)) {return;}
+        netMsg.HandleRequestReceived();
+    }
+
+    public void OnGrowableDataRequestReceived(NetworkConnection connection, GrowableDataRequest netMsg) {
+        if(!growableDataByNetId.ContainsKey(netMsg.networkId)) {Debug.Log("No such growable with netId: " + netMsg.networkId); return;}
+        netMsg.HandleRequestReceived(connection);
     }
 
     #region Utility

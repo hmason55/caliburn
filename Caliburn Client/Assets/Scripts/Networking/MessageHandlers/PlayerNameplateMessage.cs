@@ -9,7 +9,7 @@ public class PlayerNameplateMessage : MessageBase {
     public string title;
 
     public void HandleRequest() {
-        // Serv
+        // Server
     }
 
     public void HandleRequestReceived(NetworkIdentity identity) {

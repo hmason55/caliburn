@@ -4,22 +4,9 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class ProcessLogin : MonoBehaviour {
-
-    static ProcessLogin _instance;
-
-    public static ProcessLogin Instance {
-        get {
-            if(_instance == null) {throw new MissingReferenceException();}
-            return _instance;
-        }
-    }
+public class ProcessLogin : MonoSingleton<ProcessLogin> {
     
     const string DB_LOGIN_URL = "http://localhost/caliburn/login.php";
-
-    void Awake() {
-        _instance = this;
-    }
 
     public void Request(string username, string password, Action<int> onComplete = null) {
         StartCoroutine(LoginRequest(username, password, onComplete));
