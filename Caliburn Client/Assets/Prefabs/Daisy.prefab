@@ -50,7 +50,7 @@ MonoBehaviour:
   ownerId: 
   position: {x: 0, y: 0}
   creationDate: 0
-  completionDate: 0
+  completionDate: 100
   growthStages:
   - animation:
     - {fileID: 9027660467087870237, guid: b9333c8f207d9f849ae87e7e7192bd37, type: 3}
@@ -109,8 +109,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   serverOnly: 0
   localPlayerAuthority: 0
-  m_AssetId: 43585ba19e3fba849a5eb3ce1bfdac5e
-  m_SceneId: 0
+  m_AssetId: 
+  m_SceneId: 634334889
 --- !u!1 &3808272261278099033
 GameObject:
   m_ObjectHideFlags: 0

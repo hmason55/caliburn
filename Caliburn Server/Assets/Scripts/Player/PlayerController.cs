@@ -2,20 +2,40 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Mirror;
+using UnityEngine.EventSystems;
 
 public class PlayerController : MonoSingleton<PlayerController> {
+    public enum State {
+        Movement = 0,
+        Till = 1,
+        Plant = 2,
+        Water = 3,
+        Fertilize = 4,
+        Harvest = 5,
+        Chop = 6,
+        Uproot = 7,
+    }
+    
+    public string primaryUsage = "movement";
+    NetworkIdentity identity;
+
+    PlayerView playerView;
+
+    public Item plantable;
+
     void Awake() {
-        if(!GetComponent<NetworkIdentity>().isLocalPlayer) { Destroy(this); }
+        identity = GetComponent<NetworkIdentity>();
+        playerView = GetComponent<PlayerView>();
     }
 
-    void Update() {
-        if(Input.GetKeyDown(KeyCode.D)) {
-            //MoveTo(new Vector2(transform.position.x + 1f, transform.position.y));
-        }
+    void Start() {
+        if(!identity.isLocalPlayer) {return;}
+
+        //Client.Instance.playerIdentity = identity;
+        //InventoryView.Instance.RequestInventoryData();
     }
 
-    void MoveTo(Vector2 destination) {
-       // PlayerMoveToRequest moveTo = new PlayerMoveToRequest { position = destination };
-        //moveTo.HandleRequest();
+    bool MouseOverUI() {
+        return EventSystem.current.IsPointerOverGameObject();
     }
 }

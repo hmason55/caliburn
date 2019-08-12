@@ -7,10 +7,22 @@ using UnityEngine.SceneManagement;
 using Mirror;
 
 public class Client : NetworkManager {
+    public static Client _instance;
+
+    public static Client Instance {
+        get {
+            if(_instance == null) {throw new MissingReferenceException();}
+            return _instance;
+        }
+    }
 
     public LoginManager loginManager;
-    
+    public NetworkIdentity playerIdentity;
 
+    public override void Awake() {
+        _instance = this;
+        base.Awake();
+    }
 
     public override void Start() {
         Application.runInBackground = true;
@@ -94,6 +106,9 @@ public class Client : NetworkManager {
         NetworkClient.RegisterHandler<PlayerNameplateMessage>(OnPlayerNameplateMessageReceived);
         NetworkClient.RegisterHandler<PlayerDataSyncMessage>(OnPlayerDataSyncMessageReceived);
         NetworkClient.RegisterHandler<GrowableDataRequest>(OnGrowableDataRequestReceived);
+        NetworkClient.RegisterHandler<PlayerInventorySyncRequest>(OnPlayerInventorySyncRequestReceived);
+        NetworkClient.RegisterHandler<PlayerItemSyncMessage>(OnPlayerItemSyncMessageReceived);
+        NetworkClient.RegisterHandler<SpawnSoilMessage>(OnSpawnSoilMessageReceived);
         //NetworkClient.RegisterHandler<PlayerNameplateSyncRequest>;
         //NetworkClient.RegisterHandler<SpawnPrefabMessage>(OnSpawnPrefabMessageReceived);
     }
@@ -192,6 +207,18 @@ public class Client : NetworkManager {
 
     void OnGrowableDataRequestReceived(NetworkConnection connection, GrowableDataRequest netMsg) {
         if(!NetworkIdentity.spawned.ContainsKey(netMsg.networkId)) {return;}
+        netMsg.HandleRequestReceived();
+    }
+
+    void OnPlayerInventorySyncRequestReceived(NetworkConnection connection, PlayerInventorySyncRequest netMsg) {
+        netMsg.HandleRequestReceived();
+    }
+
+    void OnPlayerItemSyncMessageReceived(NetworkConnection connection, PlayerItemSyncMessage netMsg) {
+        netMsg.HandleRequestReceived();
+    }
+
+    void OnSpawnSoilMessageReceived(NetworkConnection connection, SpawnSoilMessage netMsg) {
         netMsg.HandleRequestReceived();
     }
 

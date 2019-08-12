@@ -12,7 +12,7 @@ public class PlayerSpawnGrowableRequest : MessageBase {
 
     public void HandleRequest() {
         if(growableId >= Growables.Instance.plants.Count) {complete = true; return;}
-
+        
         GameObject go = NetworkManager.Instantiate(Growables.Instance.plants[growableId], position, Quaternion.identity) as GameObject;
         PlantView plantView = go.GetComponent<PlantView>();
 

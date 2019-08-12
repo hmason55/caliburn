@@ -18,12 +18,7 @@ public class ProcessGrowable : MonoSingleton<ProcessGrowable> {
     IEnumerator SpawnGrowableRequest(PlayerSpawnGrowableRequest request, Action<int> onComplete = null) {
         
         Growable growable = Growables.Instance.growableData[request.growableId];
-        Debug.Log(request.ownerId);
-        Debug.Log(growable.growableId.ToString());
-        Debug.Log(request.position.x.ToString());
-        Debug.Log(request.position.y.ToString());
-        Debug.Log(request.creationDate.ToString());
-        Debug.Log(request.completionDate.ToString());
+
         Dictionary<string, string> parameters = new Dictionary<string, string>(){ 
             { "owner_uid", request.ownerId }, 
             { "growable_id", growable.growableId.ToString() }, 

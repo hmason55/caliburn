@@ -328,6 +328,7 @@ GameObject:
   - component: {fileID: 2681363449560294899}
   - component: {fileID: 2681363449560294901}
   - component: {fileID: 6589355134675053365}
+  - component: {fileID: 8657171478444937584}
   - component: {fileID: 7186714060309096178}
   - component: {fileID: 5137179596621671948}
   m_Layer: 15
@@ -390,6 +391,19 @@ CircleCollider2D:
   m_Offset: {x: 0, y: 0}
   serializedVersion: 2
   m_Radius: 0.5
+--- !u!114 &8657171478444937584
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2681363449560294897}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bf7bc2371faa3bf41b9dbe0275f0df6d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  primaryUsage: movement
 --- !u!114 &7186714060309096178
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -419,6 +433,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   localDestination: {x: 0, y: 0}
+  actualPosition: {x: 0, y: 0}
   nameplate: {fileID: 2681363448780891676}
-  spriteRenderer: {fileID: 2681363448566177423}
   animationController: {fileID: 7614634950552513929}
+  minMovement: 1.25

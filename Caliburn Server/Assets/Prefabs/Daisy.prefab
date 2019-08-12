@@ -51,13 +51,6 @@ MonoBehaviour:
   position: {x: 0, y: 0}
   creationDate: 0
   completionDate: 0
-  growthStages:
-  - animation:
-    - {fileID: 9027660467087870237, guid: b9333c8f207d9f849ae87e7e7192bd37, type: 3}
-  - animation:
-    - {fileID: 8015627532917061682, guid: b9333c8f207d9f849ae87e7e7192bd37, type: 3}
-  - animation:
-    - {fileID: -803404233696467200, guid: b9333c8f207d9f849ae87e7e7192bd37, type: 3}
 --- !u!58 &3808272260027320282
 CircleCollider2D:
   m_ObjectHideFlags: 0
@@ -178,7 +171,7 @@ SpriteRenderer:
   m_LightmapParameters: {fileID: 0}
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 5
+  m_SortingOrder: 6
   m_Sprite: {fileID: 1447142054169800622, guid: b9333c8f207d9f849ae87e7e7192bd37,
     type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}

@@ -2,6 +2,7 @@
 using Mirror;
 using System.Text;
 using System.Collections.Generic;
+using UnityEngine.Tilemaps;
 
 public class Server : NetworkManager {
 
@@ -17,6 +18,10 @@ public class Server : NetworkManager {
     public Dictionary<NetworkConnection, string> usernamesByConnection;
     public Dictionary<uint, PlayerData> playerDataByNetId;
     public Dictionary<uint, GrowableData> growableDataByNetId;
+    public Dictionary<uint, SoilData> soilDataByNetId;
+    public BoundsInt bounds;
+
+    public RuleTile tile;
 
     public override void Awake() {
         _instance = this;
@@ -31,13 +36,23 @@ public class Server : NetworkManager {
 
     void Update() {
         if(Input.GetKeyDown(KeyCode.Space)) {
+
         }
+    }
+
+    GameObject OnSpawnTile(Vector3 position, System.Guid assetId) {
+        return NetworkManager.Instantiate(Soils.Instance.soils[0], position, Quaternion.identity);
+    }
+
+    void OnUnSpawnTile(GameObject spawned) {
+
     }
 
     void Initialize() {
         usernamesByConnection = new Dictionary<NetworkConnection, string>();
         playerDataByNetId = new Dictionary<uint, PlayerData>();
         growableDataByNetId = new Dictionary<uint, GrowableData>();
+        soilDataByNetId = new Dictionary<uint, SoilData>();
         NetworkServer.Listen(64);
         RegisterHandlers();
         SpawnGrowables();
@@ -55,10 +70,21 @@ public class Server : NetworkManager {
         NetworkServer.RegisterHandler<PlayerSpawnGrowableRequest>(OnPlayerSpawnGrowableRequestReceived);
         NetworkServer.RegisterHandler<PlayerUnSpawnGrowableRequest>(OnPlayerUnSpawnGrowableRequestReceived);
         NetworkServer.RegisterHandler<GrowableDataRequest>(OnGrowableDataRequestReceived);
+        NetworkServer.RegisterHandler<PlayerInventorySyncRequest>(OnPlayerInventorySyncRequestReceived);
+        NetworkServer.RegisterHandler<PlayerSpawnSoilRequest>(OnPlayerSpawnSoilRequestReceived);
         //NetworkServer.RegisterSpawn
+    }  
+
+    void SpawnSoil() {
+        ProcessSoil.Instance.LoadRequest((requestCode) => {
+            
+            // Do other stuff after spawning soil.
+        });
     }
 
     void SpawnGrowables() {
+
+
         ProcessGrowable.Instance.LoadRequest((requestCode) => {
             
             // Do other stuff after spawning growables.
@@ -216,6 +242,16 @@ public class Server : NetworkManager {
     public void OnGrowableDataRequestReceived(NetworkConnection connection, GrowableDataRequest netMsg) {
         if(!growableDataByNetId.ContainsKey(netMsg.networkId)) {Debug.Log("No such growable with netId: " + netMsg.networkId); return;}
         netMsg.HandleRequestReceived(connection);
+    }
+
+    public void OnPlayerInventorySyncRequestReceived(NetworkConnection connection, PlayerInventorySyncRequest netMsg) {
+        if(!usernamesByConnection.ContainsKey(connection)) {return;}
+        netMsg.HandleRequestReceived(connection);
+    }
+
+    public void OnPlayerSpawnSoilRequestReceived(NetworkConnection connection, PlayerSpawnSoilRequest netMsg) {
+        Debug.Log(netMsg.position);
+        netMsg.HandleRequestReceived();
     }
 
     #region Utility

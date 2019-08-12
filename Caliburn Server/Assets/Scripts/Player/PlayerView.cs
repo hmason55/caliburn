@@ -19,6 +19,10 @@ public class PlayerView : MonoBehaviour {
 
     void Start() {
         identity = GetComponent<NetworkIdentity>();
+        if(!identity.isLocalPlayer) {
+            Destroy(GetComponent<PlayerController>());
+        }
+
         rb = GetComponent<Rigidbody2D>();
         StartCoroutine(Sync());
     }
