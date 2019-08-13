@@ -16,7 +16,6 @@ public class Growables : MonoSingleton<Growables> {
         }
     }
 
-    
     void LoadGrowables() {
         // Hardcoded for now
         growableData = new Dictionary<int, Growable> {

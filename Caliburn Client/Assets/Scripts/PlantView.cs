@@ -20,6 +20,7 @@ public class PlantView : MonoBehaviour {
     void Awake() {
         circleCollider2D = GetComponent<CircleCollider2D>();
         spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+        Destroy(GetComponent<Rigidbody2D>());
     }
 
     void Start() {

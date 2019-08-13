@@ -8,7 +8,7 @@ public class GrowableDataRequest : MessageBase {
     public int completionDate;
 
     public void HandleRequest() {
-        NetworkClient.Send(this);
+        NetworkClient.Send<GrowableDataRequest>(this);
     }
 
     public void HandleRequestReceived() {

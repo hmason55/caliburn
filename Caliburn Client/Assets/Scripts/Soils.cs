@@ -20,7 +20,7 @@ public class Soils : MonoSingleton<Soils> {
     void LoadSoils() {
         // Hardcoded for now
         soilData = new Dictionary<int, Soil> {
-            { 0, new Soil { name = "Dirt Soil", radius = 0} },
+            { 0, new Soil { name = "Dirt Soil", soilId = 0, layer = 0, radius = 0} },
         };
     }
 }

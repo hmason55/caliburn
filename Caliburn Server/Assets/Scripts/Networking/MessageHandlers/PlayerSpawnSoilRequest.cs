@@ -13,60 +13,16 @@ public class PlayerSpawnSoilRequest : MessageBase {
     public bool complete = false;
 
     public void HandleRequest() {
-        //GameObject go = NetworkManager.Instantiate(Soils.Instance.soils[soilId], position, Quaternion.identity) as GameObject;
-
-        //TileBase tile = World.Instance.tilemaps[terrainLayer].GetTile(new Vector3Int((int)position.x, (int)position.y, 0));
-        //if(tile == null) {return;}
-
-        //TileBase.GetTileData(new Vector3Int((int)position.x, (int)position.y, 0), World.Instance.tilemaps[terrainLayer], ref tileData);
-        //PlantView plantView = go.GetComponent<PlantView>();
-        /*
-        plantView.Validate((valid) => {
-            if(valid) {
-                NetworkManager.Destroy(go.GetComponent<Rigidbody2D>());
-                NetworkIdentity identity = go.GetComponent<NetworkIdentity>();
-                System.Guid prefabAssetId = identity.assetId;
-                
-                plantView.HandleRequest(this);
-                ClientScene.RegisterSpawnHandler(prefabAssetId, OnSpawnGrowable, OnUnSpawnGrowable);
-                NetworkServer.Spawn(go, prefabAssetId);
-
-                Server.Instance.soilDataByNetId.Add(identity.netId, CreateSoil());
-                complete = true;
-            } else {
-                NetworkManager.Destroy(go);
-                complete = true;
-            }
-        });
-        */
-    }
-
-    public void HandleRequestReceived() {
         Vector3Int gridPos = new Vector3Int((int)position.x, (int)position.y, 0);
 
-        int[] proximityCollisionLayers = new int[] {
-            6,
-        };
-
         // Check 8 neighbor tiles for a collision layer
-        for(int x = gridPos.x-1; x <= gridPos.x+1; x++) {
-            for(int y = gridPos.y-1; y <= gridPos.y+1; y++) {
-                Tile tile = World.Instance.tilemaps[soilLayer].GetTile(new Vector3Int(x, y, 0)) as Tile;
-                RuleTile ruleTile = World.Instance.tilemaps[soilLayer].GetTile(new Vector3Int(x, y, 0)) as RuleTile;
-                if(tile == null && ruleTile == null) {Debug.Log("Can't place soil without terrain."); return;}
-
-                for(int i = 0; i < proximityCollisionLayers.Length; i++) {
-                    Tile collision = World.Instance.tilemaps[proximityCollisionLayers[i]].GetTile(new Vector3Int(x, y, 0)) as Tile;
-                    if(collision != null) {Debug.Log("There is a collision here."); return;}
-                }
-            }
-        }
+        //if(HasProximityCollision(gridPos, 1, new int[] {6})) {return;}
 
         GameObject go = NetworkManager.Instantiate(Soils.Instance.soils[soilId], position, Quaternion.identity) as GameObject;
         SoilView soilView = go.GetComponent<SoilView>();
 
-        soilView.Validate((valid) => {
-            if(valid) {
+        //soilView.Validate((valid) => {
+        //    if(valid) {
                 NetworkManager.Destroy(go.GetComponent<Rigidbody2D>());
                 NetworkIdentity identity = go.GetComponent<NetworkIdentity>();
                 System.Guid prefabAssetId = identity.assetId;
@@ -79,27 +35,66 @@ public class PlayerSpawnSoilRequest : MessageBase {
 
                 SpawnSoilMessage spawnMessage = new SpawnSoilMessage {
                     networkId = identity.netId,
-                    soilLayer = 0,
+                    soilId = soilId,
+                    soilLayer = soilLayer,
                     position = position,
-                    soilId = 0,
                 };
                 spawnMessage.HandleRequest();
 
-                // Place proximity tiles
-                for(int x = gridPos.x-1; x <= gridPos.x+1; x++) {
-                    for(int y = gridPos.y-1; y <= gridPos.y+1; y++) {
-                        World.Instance.tilemaps[soilLayer].SetTile(new Vector3Int(x, y, 0), Soils.Instance.soilTiles[soilId]); 
-                    }
-                }
+                PlaceProximityTiles(gridPos, 1);
 
+        //        complete = true;
+        //    } else {
+        //       NetworkManager.Destroy(go);
+        //        complete = true;
+        //    }
+        //});
+    }
+
+    public void HandleRequestReceived() {
+        Vector3Int gridPos = new Vector3Int((int)position.x, (int)position.y, 0);
+
+        // Check 8 neighbor tiles for a collision layer
+        if(HasProximityCollision(gridPos, 1, new int[] {6})) {return;}
+
+        GameObject go = NetworkManager.Instantiate(Soils.Instance.soils[soilId], position, Quaternion.identity) as GameObject;
+        SoilView soilView = go.GetComponent<SoilView>();
+
+        soilView.Validate((valid) => {
+            if(valid) {
+
+                ProcessSoil.Instance.SpawnRequest(this, (requestCode) => {
+                    Debug.Log("Request completed with a request code: " + requestCode);
+                    switch(requestCode) {
+                        case 0:
+                            NetworkManager.Destroy(go.GetComponent<Rigidbody2D>());
+                            NetworkIdentity identity = go.GetComponent<NetworkIdentity>();
+                            System.Guid prefabAssetId = identity.assetId;
+                            
+                            soilView.HandleRequest(this);
+                            ClientScene.RegisterSpawnHandler(prefabAssetId, OnSpawnSoil, OnUnSpawnSoil);
+                            NetworkServer.Spawn(go, prefabAssetId);
+
+                            Server.Instance.soilDataByNetId.Add(identity.netId, CreateSoil());
+
+                            SpawnSoilMessage spawnMessage = new SpawnSoilMessage {
+                                networkId = identity.netId,
+                                soilId = soilId,
+                                soilLayer = soilLayer,
+                                position = position,
+                            };
+                            spawnMessage.HandleRequest();
+
+                            PlaceProximityTiles(gridPos, 1);
+                        break;
+                    }
+                });
                 complete = true;
             } else {
                 NetworkManager.Destroy(go);
                 complete = true;
             }
         });
-
-
     }
 
     GameObject OnSpawnSoil(Vector3 position, System.Guid assetId) {
@@ -117,5 +112,31 @@ public class PlayerSpawnSoilRequest : MessageBase {
             posX = (int)position.x,
             posY = (int)position.y,
         };
+    }
+
+    bool HasProximityCollision(Vector3Int pos, int radius, int[] collisionLayers) {
+        for(int x = pos.x-radius; x <= pos.x+radius; x++) {
+            for(int y = pos.y-radius; y <= pos.y+radius; y++) {
+                Tile tile = World.Instance.tilemaps[soilLayer].GetTile(new Vector3Int(x, y, 0)) as Tile;
+                RuleTile ruleTile = World.Instance.tilemaps[soilLayer].GetTile(new Vector3Int(x, y, 0)) as RuleTile;
+                if(tile == null && ruleTile == null) {Debug.Log("Can't place soil without terrain."); return true;}
+
+                for(int i = 0; i < collisionLayers.Length; i++) {
+                    Tile collision = World.Instance.tilemaps[collisionLayers[i]].GetTile(new Vector3Int(x, y, 0)) as Tile;
+                    if(collision != null) {Debug.Log("There is a collision here."); return true;}
+                }
+            }
+        }
+
+        return false;
+    }
+
+    void PlaceProximityTiles(Vector3Int pos, int radius) {
+        // Place proximity tiles
+        for(int x = pos.x-radius; x <= pos.x+radius; x++) {
+            for(int y = pos.y-radius; y <= pos.y+radius; y++) {
+                World.Instance.tilemaps[soilLayer].SetTile(new Vector3Int(x, y, 0), Soils.Instance.soilTiles[soilId]); 
+            }
+        }
     }
 }

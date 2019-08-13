@@ -13,6 +13,7 @@ public class Cursor : MonoSingleton<Cursor> {
     public string usage;
     bool proximityCollisions = false;
     
+    bool allowAction = false;
 
     void Awake() {
         spriteRenderer = GetComponent<SpriteRenderer>();
@@ -22,23 +23,56 @@ public class Cursor : MonoSingleton<Cursor> {
     }
 
     void FixedUpdate() {
+        EvaluateCollisions();
+    }
+
+    void EvaluateCollisions() {
+        int soil = 0;
+        int growable = 0;
+        int terrain = 0;
+
+        foreach(GameObject collision in collisions) {
+            switch(LayerMask.LayerToName(collision.layer)) {
+                case "Soil":
+                    soil++;
+                break;
+
+                case "Growable":
+                    growable++;
+                break;
+
+                case "Terrain Collision":
+                    terrain++;
+                break;
+            }
+        }
 
         switch(usage) {
             case "plant":
                 gameObject.layer = LayerMask.NameToLayer("Growable");
                 proximityCollisions = false;
+                if( soil == 1 && growable + terrain == 0) {
+                    allowAction = true;
+                } else {
+                    allowAction = false;
+                }
             break;
 
             case "till":
                 CheckProximityCollisions(1);
                 gameObject.layer = LayerMask.NameToLayer("Soil");
+                if(collisions.Count == 0 && !proximityCollisions) {
+                    allowAction = true;
+                } else {
+                    allowAction = false;
+                }
             break;
         }
 
-        if(collisions.Count > 0 || proximityCollisions) {
-            boundsRenderer.color = new Color(1f, 0f, 0f, 0.4f);
-        } else {
+        if(allowAction) {
             boundsRenderer.color = new Color(0f, 1f, 0f, 0.4f);
+        } else {
+            boundsRenderer.color = new Color(1f, 0f, 0f, 0.4f);
         }
     }
 
@@ -81,7 +115,7 @@ public class Cursor : MonoSingleton<Cursor> {
     }
 
     public void Till() {
-        if(collisions.Count > 0 || proximityCollisions) {
+        if(!allowAction) {
             Debug.Log("Can't till here.");
             return;
         }
@@ -94,7 +128,7 @@ public class Cursor : MonoSingleton<Cursor> {
     }
 
     public void Plant(Item item) {
-        if(collisions.Count > 0) {
+        if(!allowAction) {
             Debug.Log("Can't plant here.");
             return;
         }

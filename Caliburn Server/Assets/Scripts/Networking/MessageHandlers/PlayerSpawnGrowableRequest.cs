@@ -16,8 +16,8 @@ public class PlayerSpawnGrowableRequest : MessageBase {
         GameObject go = NetworkManager.Instantiate(Growables.Instance.plants[growableId], position, Quaternion.identity) as GameObject;
         PlantView plantView = go.GetComponent<PlantView>();
 
-        plantView.Validate((valid) => {
-            if(valid) {
+        //plantView.Validate((valid) => {
+        //    if(valid) {
                 NetworkManager.Destroy(go.GetComponent<Rigidbody2D>());
                 NetworkIdentity identity = go.GetComponent<NetworkIdentity>();
                 System.Guid prefabAssetId = identity.assetId;
@@ -28,11 +28,11 @@ public class PlayerSpawnGrowableRequest : MessageBase {
 
                 Server.Instance.growableDataByNetId.Add(identity.netId, CreateGrowable());
                 complete = true;
-            } else {
-                NetworkManager.Destroy(go);
-                complete = true;
-            }
-        });
+         //   } else {
+        //        NetworkManager.Destroy(go);
+        //        complete = true;
+        //    }
+        //});
     }
 
     public void HandleRequestReceived() {

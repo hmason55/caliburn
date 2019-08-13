@@ -109,6 +109,7 @@ public class Client : NetworkManager {
         NetworkClient.RegisterHandler<PlayerInventorySyncRequest>(OnPlayerInventorySyncRequestReceived);
         NetworkClient.RegisterHandler<PlayerItemSyncMessage>(OnPlayerItemSyncMessageReceived);
         NetworkClient.RegisterHandler<SpawnSoilMessage>(OnSpawnSoilMessageReceived);
+        NetworkClient.RegisterHandler<SoilDataRequest>(OnSoilDataRequestReceived);
         //NetworkClient.RegisterHandler<PlayerNameplateSyncRequest>;
         //NetworkClient.RegisterHandler<SpawnPrefabMessage>(OnSpawnPrefabMessageReceived);
     }
@@ -219,6 +220,11 @@ public class Client : NetworkManager {
     }
 
     void OnSpawnSoilMessageReceived(NetworkConnection connection, SpawnSoilMessage netMsg) {
+        netMsg.HandleRequestReceived();
+    }
+
+    void OnSoilDataRequestReceived(NetworkConnection connection, SoilDataRequest netMsg) {
+        if(!NetworkIdentity.spawned.ContainsKey(netMsg.networkId)) {return;}
         netMsg.HandleRequestReceived();
     }
 

@@ -40,22 +40,15 @@ public class Server : NetworkManager {
         }
     }
 
-    GameObject OnSpawnTile(Vector3 position, System.Guid assetId) {
-        return NetworkManager.Instantiate(Soils.Instance.soils[0], position, Quaternion.identity);
-    }
-
-    void OnUnSpawnTile(GameObject spawned) {
-
-    }
-
     void Initialize() {
         usernamesByConnection = new Dictionary<NetworkConnection, string>();
         playerDataByNetId = new Dictionary<uint, PlayerData>();
         growableDataByNetId = new Dictionary<uint, GrowableData>();
         soilDataByNetId = new Dictionary<uint, SoilData>();
+        SpawnSoils(); // onComplete -> SpawnGrowables
+
         NetworkServer.Listen(64);
         RegisterHandlers();
-        SpawnGrowables();
     } 
 
     void RegisterHandlers() {
@@ -72,41 +65,24 @@ public class Server : NetworkManager {
         NetworkServer.RegisterHandler<GrowableDataRequest>(OnGrowableDataRequestReceived);
         NetworkServer.RegisterHandler<PlayerInventorySyncRequest>(OnPlayerInventorySyncRequestReceived);
         NetworkServer.RegisterHandler<PlayerSpawnSoilRequest>(OnPlayerSpawnSoilRequestReceived);
+        NetworkServer.RegisterHandler<SoilDataRequest>(OnSoilDataRequestReceived);
+        //NetworkServer.RegisterHandler<GrowableDataRequest>(OnGrowableDataRequestReceived);
         //NetworkServer.RegisterSpawn
     }  
 
-    void SpawnSoil() {
+    void SpawnSoils() {
         ProcessSoil.Instance.LoadRequest((requestCode) => {
             
             // Do other stuff after spawning soil.
+            SpawnGrowables();
         });
     }
 
     void SpawnGrowables() {
-
-
         ProcessGrowable.Instance.LoadRequest((requestCode) => {
             
             // Do other stuff after spawning growables.
         });
-    }
-
-    public void SpawnObject(GameObject prefab, Vector3 position) {
-        GameObject go = Instantiate(prefab, position, Quaternion.identity) as GameObject;
-        System.Guid prefabAssetId = go.GetComponent<NetworkIdentity>().assetId;
-        ClientScene.RegisterSpawnHandler(prefabAssetId, OnSpawnPrefab, OnUnSpawnPrefab);
-        NetworkServer.Spawn(go, prefabAssetId);
-        //ProcessGrowable.Instance.SpawnRequest("username", 1, Vector2.zero, null);
-
-        //if(NetworkIdentity.spawned.ContainsKey[identity.])
-    }
-
-    public GameObject OnSpawnPrefab(Vector3 position, System.Guid assetId) {
-        return Instantiate(Growables.Instance.plants[0], position, Quaternion.identity);
-    }
-
-    public void OnUnSpawnPrefab(GameObject spawned) {
-        Destroy(spawned);
     }
 
     void OnClientConnected(NetworkConnection connection, ConnectMessage netMsg) {
@@ -253,6 +229,12 @@ public class Server : NetworkManager {
         Debug.Log(netMsg.position);
         netMsg.HandleRequestReceived();
     }
+
+    public void OnSoilDataRequestReceived(NetworkConnection connection, SoilDataRequest netMsg) {
+        if(!soilDataByNetId.ContainsKey(netMsg.networkId)) {Debug.Log("No such soil with netId: " + netMsg.networkId); return;}
+        netMsg.HandleRequestReceived(connection);
+    }
+
 
     #region Utility
     byte[] StringToBytes(string str) {
