@@ -4,29 +4,25 @@ using System.Text;
 using System.Collections.Generic;
 using UnityEngine.Tilemaps;
 
-public class Server : NetworkManager {
+public class Server : NetworkManagerSingleton<Server> {
 
-    public static Server _instance;
+    /*public static Server _instance;
 
     public static Server Instance {
         get {
             if(_instance == null) {throw new MissingReferenceException();}
             return _instance;
         }
-    }
+    }*/
 
     public Dictionary<NetworkConnection, string> usernamesByConnection;
     public Dictionary<uint, PlayerData> playerDataByNetId;
     public Dictionary<uint, GrowableData> growableDataByNetId;
     public Dictionary<uint, SoilData> soilDataByNetId;
-    public BoundsInt bounds;
 
-    public RuleTile tile;
-
-    public override void Awake() {
-        _instance = this;
-        base.Awake();
-    }
+    //public override void Awake() {
+     //   base.Awake();
+    //}
 
     public override void Start() {
 
@@ -66,8 +62,7 @@ public class Server : NetworkManager {
         NetworkServer.RegisterHandler<PlayerInventorySyncRequest>(OnPlayerInventorySyncRequestReceived);
         NetworkServer.RegisterHandler<PlayerSpawnSoilRequest>(OnPlayerSpawnSoilRequestReceived);
         NetworkServer.RegisterHandler<SoilDataRequest>(OnSoilDataRequestReceived);
-        //NetworkServer.RegisterHandler<GrowableDataRequest>(OnGrowableDataRequestReceived);
-        //NetworkServer.RegisterSpawn
+        NetworkServer.RegisterHandler<WaterGrowableRequest>(OnWaterGrowableRequestReceived);
     }  
 
     void SpawnSoils() {
@@ -102,33 +97,11 @@ public class Server : NetworkManager {
     }
 
     void OnLoginRequestReceived(NetworkConnection connection, UserLoginRequest netMsg) {
-        ProcessLogin.Instance.Request(netMsg.username, netMsg.password, (requestCode) => {
-            netMsg.requestCode = requestCode;
-
-            switch(requestCode) {
-                case 0:
-                    if(!usernamesByConnection.ContainsValue(netMsg.username)) {
-                        netMsg.connectionId = connection.connectionId;
-                        usernamesByConnection.Add(connection, netMsg.username);
-                        Debug.Log(netMsg.username + " logged in.");
-                        
-                    } else {
-                        netMsg.requestCode = 5;
-                    }
-                break;
-            }
-            
-            Debug.Log("Login request completed with request code: " + requestCode);
-            NetworkServer.SendToClient<UserLoginRequest>(connection.connectionId, netMsg);
-        });
+        netMsg.HandleRequestReceived(connection);
     }
 
     void OnSignupRequestReceived(NetworkConnection connection, UserSignupRequest netMsg) {
-        ProcessSignup.Instance.Request(netMsg.username, netMsg.password, netMsg.email, (requestCode) => {
-            Debug.Log("Signup request completed with request code: " + requestCode);
-            netMsg.requestCode = requestCode;
-            NetworkServer.SendToClient<UserSignupRequest>(connection.connectionId, netMsg);
-        });
+        netMsg.HandleRequestReceived(connection);
     }
 
     public override void OnServerAddPlayer(NetworkConnection connection, AddPlayerMessage netMsg) {
@@ -163,75 +136,51 @@ public class Server : NetworkManager {
     }
 
     void OnChatMessageReceived(NetworkConnection connection, ChatMessage netMsg) {
-        Debug.Log("Message received");
-
-        switch(netMsg.target) {
-            case "World":
-                NetworkServer.SendToAll<ChatMessage>(netMsg);
-            break;
-
-            default:
-                //NetworkServer.SendToClient<ChatMessage>(netMsg);
-            break;
-        }
-        
+        netMsg.HandleRequestReceived();
     }
 
     void OnPlayerMoveToRequestReceived(NetworkConnection connection, PlayerMoveToRequest netMsg) {
         if(!NetworkIdentity.spawned.ContainsKey(netMsg.networkId)) {return;}
         if(!playerDataByNetId.ContainsKey(netMsg.networkId)) {return;}
         netMsg.HandleRequestReceived(NetworkIdentity.spawned[netMsg.networkId]);
-        //Debug.Log(netMsg.destination);
-        playerDataByNetId[netMsg.networkId].destination = netMsg.destination;
     }
 
     void OnPlayerDataSyncMessageReceived(NetworkConnection connection, PlayerDataSyncMessage netMsg) {
-        //Debug.Log("PlayerData sync request received.");
-        //Debug.Log(playerDataByNetId.Count);
-        foreach(KeyValuePair<uint, PlayerData>  playerData in playerDataByNetId) {
-            
-            PlayerView playerView = NetworkIdentity.spawned[playerData.Key].GetComponent<PlayerView>();
-
-            PlayerDataSyncMessage playerDataMessage = new PlayerDataSyncMessage {
-                networkId = playerData.Key,
-                connectionId = playerData.Value.connectionId,
-                username = playerData.Value.username,
-                ipAddress = playerData.Value.ipAddress,
-                position = (Vector2)playerView.transform.position,
-                destination = playerData.Value.destination,
-            };
-            playerDataMessage.HandleRequestReceived(connection);
-        }
+        netMsg.HandleRequestReceived(connection);
     }
 
-    public void OnPlayerSpawnGrowableRequestReceived(NetworkConnection connection, PlayerSpawnGrowableRequest netMsg) {
+    void OnPlayerSpawnGrowableRequestReceived(NetworkConnection connection, PlayerSpawnGrowableRequest netMsg) {
         if(!usernamesByConnection.ContainsKey(connection)) {return;}
         netMsg.ownerId = usernamesByConnection[connection];
         netMsg.HandleRequestReceived();
     }
 
-    public void OnPlayerUnSpawnGrowableRequestReceived(NetworkConnection connection, PlayerUnSpawnGrowableRequest netMsg) {
+    void OnPlayerUnSpawnGrowableRequestReceived(NetworkConnection connection, PlayerUnSpawnGrowableRequest netMsg) {
         if(!usernamesByConnection.ContainsKey(connection)) {return;}
         netMsg.HandleRequestReceived();
     }
 
-    public void OnGrowableDataRequestReceived(NetworkConnection connection, GrowableDataRequest netMsg) {
+    void OnGrowableDataRequestReceived(NetworkConnection connection, GrowableDataRequest netMsg) {
         if(!growableDataByNetId.ContainsKey(netMsg.networkId)) {Debug.Log("No such growable with netId: " + netMsg.networkId); return;}
         netMsg.HandleRequestReceived(connection);
     }
 
-    public void OnPlayerInventorySyncRequestReceived(NetworkConnection connection, PlayerInventorySyncRequest netMsg) {
+    void OnPlayerInventorySyncRequestReceived(NetworkConnection connection, PlayerInventorySyncRequest netMsg) {
         if(!usernamesByConnection.ContainsKey(connection)) {return;}
         netMsg.HandleRequestReceived(connection);
     }
 
-    public void OnPlayerSpawnSoilRequestReceived(NetworkConnection connection, PlayerSpawnSoilRequest netMsg) {
+    void OnPlayerSpawnSoilRequestReceived(NetworkConnection connection, PlayerSpawnSoilRequest netMsg) {
         Debug.Log(netMsg.position);
         netMsg.HandleRequestReceived();
     }
 
-    public void OnSoilDataRequestReceived(NetworkConnection connection, SoilDataRequest netMsg) {
+    void OnSoilDataRequestReceived(NetworkConnection connection, SoilDataRequest netMsg) {
         if(!soilDataByNetId.ContainsKey(netMsg.networkId)) {Debug.Log("No such soil with netId: " + netMsg.networkId); return;}
+        netMsg.HandleRequestReceived(connection);
+    }
+
+    void OnWaterGrowableRequestReceived(NetworkConnection connection, WaterGrowableRequest netMsg) {
         netMsg.HandleRequestReceived(connection);
     }
 

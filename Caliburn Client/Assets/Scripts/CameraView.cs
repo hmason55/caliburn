@@ -5,6 +5,7 @@ using Mirror;
 
 public class CameraView : MonoSingleton<CameraView> {
     public float panSpeed = 5f;
+    public float renderDistance = 20f;
     void FixedUpdate() {
         if(NetworkClient.connection == null) {return;}
         if(NetworkClient.connection.playerController == null) {return;}

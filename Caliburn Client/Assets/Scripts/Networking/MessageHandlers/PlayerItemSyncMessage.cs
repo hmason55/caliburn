@@ -5,6 +5,7 @@ using Mirror;
 
 public class PlayerItemSyncMessage : MessageBase {
     public uint networkId;
+    public string ownerId;
     public int itemId;
     public string name;
     public int value;
@@ -17,7 +18,8 @@ public class PlayerItemSyncMessage : MessageBase {
     public void HandleRequestReceived() {
         if(!InventoryView.Instance.syncing) {return;}
         Item item = new Item {
-            id = itemId,
+            ownerId = ownerId,
+            itemId = itemId,
             name = name,
             value = value,
             quantity = quantity,

@@ -18,16 +18,34 @@ public class Hotkey : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
     }
 
     public string keystroke;
-    public string input;
+    
     public Image image;
     public Item item;
+    public Text hotkeyText;
+
+    string[] inputNames = { "1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "=", };
+
+    string[] buttonNames = { 
+        "Hotkey 1", 
+        "Hotkey 2", 
+        "Hotkey 3", 
+        "Hotkey 4", 
+        "Hotkey 5", 
+        "Hotkey 6", 
+        "Hotkey 7", 
+        "Hotkey 8", 
+        "Hotkey 9", 
+        "Hotkey 10", 
+        "Hotkey 11", 
+        "Hotkey 12", 
+    };
 
     void Awake() {
-        input = "Hotkey " + (transform.GetSiblingIndex()+1);
+        hotkeyText.text = inputNames[transform.GetSiblingIndex()];
     }
 
     void Update() {
-        if(Input.GetButtonDown(input)) {
+        if(Input.GetButtonDown(buttonNames[transform.GetSiblingIndex()])) {
             OnHotkey();
         }
     }
@@ -43,6 +61,11 @@ public class Hotkey : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHa
 
             case "plant":
                 Debug.Log("Plant mode");
+                PlayerController.Instance.SetPrimaryUsage(item.primaryUsage, item);
+            break;
+
+            case "water":
+                Debug.Log("Water mode");
                 PlayerController.Instance.SetPrimaryUsage(item.primaryUsage, item);
             break;
         }

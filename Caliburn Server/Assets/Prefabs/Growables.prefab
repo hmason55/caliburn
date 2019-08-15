@@ -43,5 +43,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b9c53270a698d984e93bbb6b62c6b90a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  plants:
+  prefabs:
   - {fileID: 3808272260027320286, guid: 43585ba19e3fba849a5eb3ce1bfdac5e, type: 3}

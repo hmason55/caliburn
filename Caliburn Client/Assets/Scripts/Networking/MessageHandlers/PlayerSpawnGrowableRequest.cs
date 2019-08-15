@@ -2,11 +2,13 @@
 using Mirror;
 
 public class PlayerSpawnGrowableRequest : MessageBase {
+    public int uniqueId;
     public string ownerId;
-    public int growableId;
+    public string growableId;
     public Vector2 position;
     public int creationDate;
     public int completionDate;
+    public int waterDate;
     public bool complete = false;
     
     public void HandleRequest() {

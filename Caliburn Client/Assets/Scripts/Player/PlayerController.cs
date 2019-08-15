@@ -58,13 +58,6 @@ public class PlayerController : MonoSingleton<PlayerController> {
                 }
             break;
 
-            case "till":
-                Cursor.Instance.SnapTo(point);
-                if(Input.GetMouseButtonDown(0) && !MouseOverUI()) {
-                    Cursor.Instance.Till();
-                }
-            break;
-
             case "plant":
                 Cursor.Instance.SnapTo(point);
                 if(Input.GetMouseButtonDown(0)) {
@@ -72,10 +65,24 @@ public class PlayerController : MonoSingleton<PlayerController> {
                 }
             break;
 
+            case "till":
+                Cursor.Instance.SnapTo(point);
+                if(Input.GetMouseButtonDown(0) && !MouseOverUI()) {
+                    Cursor.Instance.Till();
+                }
+            break;
+
             case "uproot":
                 Cursor.Instance.SnapTo(point);
                 if(Input.GetMouseButtonDown(0)) {
                     Cursor.Instance.Destroy();
+                }
+            break;
+
+            case "water":
+                Cursor.Instance.SnapTo(point);
+                if(Input.GetMouseButtonDown(0)) {
+                    Cursor.Instance.Water();
                 }
             break;
         }

@@ -6,23 +6,26 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using Mirror;
 
-public class Client : NetworkManager {
-    public static Client _instance;
+public class Client : NetworkManagerSingleton<Client> {
+    /*public static Client _instance;
 
     public static Client Instance {
         get {
             if(_instance == null) {throw new MissingReferenceException();}
             return _instance;
         }
-    }
+    }*/
 
     public LoginManager loginManager;
     public NetworkIdentity playerIdentity;
 
-    public override void Awake() {
-        _instance = this;
-        base.Awake();
-    }
+    //public override void Awake() {
+     //   base.Awake();
+    //}
+    //public override void Awake() {
+        //_instance = this;
+     //   base.Awake();
+    //}
 
     public override void Start() {
         Application.runInBackground = true;
@@ -53,46 +56,6 @@ public class Client : NetworkManager {
         Debug.Log("Connecting...");
         NetworkClient.Connect("localhost");
         RegisterHandlers();
-    }
-
-    public void Login(string u, string p) {
-        UserLoginRequest user = new UserLoginRequest {
-            username = u,
-            password = p
-        };
-
-        string passwordEncryption = user.password;
-        
-        using(MD5 md5Hash = MD5.Create()) {
-            string hash = Hashing.GetMd5Hash(md5Hash, passwordEncryption);
-            if(Hashing.VerifyMd5Hash(md5Hash, passwordEncryption, hash)) {
-                user.password = hash;
-                NetworkClient.Send<UserLoginRequest>(user);
-            } else {
-                Debug.Log("Hashes are different.");
-            }
-        }
-    }
-
-    public void Signup(string u, string p, string c, string e) {
-        UserSignupRequest user = new UserSignupRequest {
-            username = u,
-            password = p,
-            email = e,
-        };
-
-        string passwordRaw = user.password;
-        
-        using(MD5 md5Hash = MD5.Create()) {
-            string hash = Hashing.GetMd5Hash(md5Hash, passwordRaw);
-            if(Hashing.VerifyMd5Hash(md5Hash, passwordRaw, hash)) {
-                user.password = hash;
-                NetworkClient.Send<UserSignupRequest>(user);
-                Debug.Log(hash);
-            } else {
-                Debug.Log("Hashes are different.");
-            }
-        }
     }
 
     void RegisterHandlers() {

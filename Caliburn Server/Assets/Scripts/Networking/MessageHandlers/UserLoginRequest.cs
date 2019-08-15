@@ -1,4 +1,5 @@
 ﻿using Mirror;
+using UnityEngine;
 
 public class UserLoginRequest : MessageBase {
     public string username;
@@ -6,17 +7,25 @@ public class UserLoginRequest : MessageBase {
     public int requestCode;
     public int connectionId;
 
-    public override void Deserialize(NetworkReader reader) {
-        username = reader.ReadString();
-        password = reader.ReadString();
-        requestCode = reader.ReadPackedInt32();
-        connectionId = reader.ReadPackedInt32();
-    }
+    public void HandleRequestReceived(NetworkConnection connection) {
+        ProcessLogin.Instance.Request(username, password, (requestCode) => {
+            this.requestCode = requestCode;
 
-    public override void Serialize(NetworkWriter writer) {
-        writer.WriteString(username);
-        writer.WriteString(password);
-        writer.WritePackedInt32(requestCode);
-        writer.WritePackedInt32(connectionId);
+            switch(requestCode) {
+                case 0:
+                    if(!Server.Instance.usernamesByConnection.ContainsValue(username)) {
+                        connectionId = connection.connectionId;
+                        Server.Instance.usernamesByConnection.Add(connection, username);
+                        Debug.Log(username + " logged in.");
+                        
+                    } else {
+                        this.requestCode = 5;
+                    }
+                break;
+            }
+            
+            Debug.Log("Login request completed with request code: " + requestCode);
+            NetworkServer.SendToClient<UserLoginRequest>(connection.connectionId, this);
+        });
     }
 }

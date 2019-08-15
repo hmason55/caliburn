@@ -4,12 +4,14 @@ using System.Collections.Generic;
 using UnityEngine;
 
 public class PlantView : MonoBehaviour {
-
+    public int uniqueId;
     public string ownerId;
     public Vector2 position;
     public int creationDate;
     public int completionDate;
+    public int waterDate;
     public Growable growable;
+
 
     CircleCollider2D circleCollider2D;
 
@@ -71,10 +73,12 @@ public class PlantView : MonoBehaviour {
     }
 
     public void HandleRequest(PlayerSpawnGrowableRequest request) {
-        growable = Growables.Instance.growableData[request.growableId];
+        growable = Growables.Instance.growablesById[request.growableId];
+        uniqueId = request.uniqueId;
         ownerId = request.ownerId;
         position = request.position;
         creationDate = request.creationDate;
         completionDate = request.completionDate;
+        waterDate = request.waterDate;
     }
 }

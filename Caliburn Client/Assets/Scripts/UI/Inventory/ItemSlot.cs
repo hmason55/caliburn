@@ -9,12 +9,15 @@ public class ItemSlot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
     public Item item;
     public Image image;
     public Text quantityText;
+    public Sprite emptySprite;
     bool dragging = false;
 
     InventorySlotContainer slotContainer;
+    
 
     void Awake() {
         slotContainer = GetComponentInParent<InventorySlotContainer>();
+        quantityText.text = "";
     }
 
     public void LoadItem(int index, Item item) {
@@ -30,11 +33,12 @@ public class ItemSlot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
     }
 
     public void Clear() {
-        image.sprite = null;
+        image.sprite = emptySprite;
         quantityText.text = "";
     }
 
     public void OnBeginDrag(PointerEventData eventData) {
+        if(item == null) { return; }
         InventoryView.Instance.dragImage.enabled = true;
         InventoryView.Instance.dragImage.sprite = image.sprite;
         dragging = true;
@@ -52,10 +56,15 @@ public class ItemSlot : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDrag
     }
 
     public void OnDrop(PointerEventData eventData) {
-        //if(eventData.pointerDrag;
-        //image.rectTransform.localPosition = Vector2.zero;
-        //InventoryView.Instance.dragImage.rectTransform.localPosition = Vector2.zero;
-        //InventoryView.Instance.dragImage.enabled = false;
-        //dragging = false;
+        ItemSlot itemSlot = eventData.pointerDrag.GetComponent<ItemSlot>();
+        Hotkey hotkey = eventData.pointerDrag.GetComponent<Hotkey>();
+        if(itemSlot == null || hotkey != null) { return; }
+        if(itemSlot == this) { return; }
+
+        int ndx1 = transform.GetSiblingIndex();
+        int ndx2 = itemSlot.transform.GetSiblingIndex();
+
+        transform.SetSiblingIndex(ndx2);
+        itemSlot.transform.SetSiblingIndex(ndx1);
     }
 }

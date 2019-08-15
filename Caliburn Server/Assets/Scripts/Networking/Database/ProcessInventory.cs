@@ -8,18 +8,19 @@ using Mirror;
 
 public class ProcessInventory : MonoSingleton<ProcessInventory> {
 
-    const string DB_LOAD_INVENTORY_URL = "http://localhost/caliburn/load_inventory.php";
+    const string DB_LOAD_USER_INVENTORY_URL = "http://localhost/caliburn/load_user_inventory.php";
 
     public void LoadRequest(NetworkConnection connection, PlayerInventorySyncRequest request, Action<int> onComplete = null) {
         StartCoroutine(LoadInventoryRequest(connection, request, onComplete));
     }
 
     IEnumerator LoadInventoryRequest(NetworkConnection connection, PlayerInventorySyncRequest request, Action<int> onComplete = null) {
-        Dictionary<string, string> parameters = new Dictionary<string, string>(){ { "uid", Server.Instance.usernamesByConnection[connection] }};
+        Dictionary<string, string> parameters = new Dictionary<string, string>(){ { "unique_id", Server.Instance.usernamesByConnection[connection] }};
 
-        using(UnityWebRequest loadRequest = UnityWebRequest.Post(DB_LOAD_INVENTORY_URL, parameters)) {
+        using(UnityWebRequest loadRequest = UnityWebRequest.Post(DB_LOAD_USER_INVENTORY_URL, parameters)) {
             yield return loadRequest.SendWebRequest();
             
+            Debug.Log(Server.Instance.usernamesByConnection[connection]);
             int requestCode = 4;
 
             if(loadRequest.isNetworkError) {
@@ -30,7 +31,9 @@ public class ProcessInventory : MonoSingleton<ProcessInventory> {
                 Debug.Log(result);
 
                 InventoryDataPack dataPack = (InventoryDataPack)JsonConvert.DeserializeObject(result, typeof(InventoryDataPack));
+                
                 requestCode = dataPack.result;
+                Debug.Log(requestCode);
 
                 switch(requestCode) {
                     case 0:
@@ -38,7 +41,7 @@ public class ProcessInventory : MonoSingleton<ProcessInventory> {
                     break;
 
                     case 1:
-                        Debug.Log("No growables to load.");
+                        Debug.Log("No items to load.");
                     break;
 
                     default:
@@ -65,7 +68,8 @@ public class ProcessInventory : MonoSingleton<ProcessInventory> {
         foreach(Item item in dataPack.items) {
             PlayerItemSyncMessage inventorySyncMessage = new PlayerItemSyncMessage {
                 networkId = request.networkId,
-                itemId = item.id,
+                ownerId = item.ownerId,
+                itemId = item.itemId,
                 name = item.name,
                 value = item.value,
                 quantity = item.quantity,

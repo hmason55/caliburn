@@ -2,10 +2,14 @@
 using UnityEngine;
 
 public class GrowableDataRequest : MessageBase {
-    public string ownerId;
     public uint networkId;
+    public int uniqueId;
+    public string ownerId;
+    public string growableId;
+    public Vector2 position;
     public int creationDate;
     public int completionDate;
+    public int waterDate;
 
     public void HandleRequest() {
         NetworkClient.Send<GrowableDataRequest>(this);

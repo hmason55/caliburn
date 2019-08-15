@@ -5,6 +5,7 @@ using Mirror;
 
 public class PlayerItemSyncMessage : MessageBase {
     public uint networkId;
+    public string ownerId;
     public int itemId;
     public string name;
     public int value;

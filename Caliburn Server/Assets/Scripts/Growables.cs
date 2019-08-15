@@ -4,22 +4,30 @@ using UnityEngine;
 using Mirror;
 
 public class Growables : MonoSingleton<Growables> {
-    public List<GameObject> plants;
-    public Dictionary<int, Growable> growableData;
+    public List<GameObject> prefabs;
+    public Dictionary<string, GameObject> prefabsById;
+    public Dictionary<string, Growable> growablesById;
     
     void Awake() {
         LoadGrowables();
-
-        foreach(GameObject plant in plants) {
-            ClientScene.RegisterPrefab(plant);
-        }
+        LoadPrefabs();
     }
 
     void LoadGrowables() {
-        // Hardcoded for now
-        growableData = new Dictionary<int, Growable> {
-            { 0, new Growable { name = "Daisy", growableId = 0, radius = 0, duration = 60 } },
-            { 1, new Growable { name = "Plant2", growableId = 1, radius = 0, duration = 1800 } },
+        // Hardcoded for now, load this later from the database.
+        growablesById = new Dictionary<string, Growable> {
+            { "Daisy", new Growable { growableId = "Daisy", duration = 60, growthStages = 2 } },
+            { "other", new Growable { growableId = "other", duration = 60, growthStages = 2 } },
         };
+    }
+    
+    void LoadPrefabs() {
+        prefabsById = new Dictionary<string, GameObject>();
+        foreach(GameObject prefab in prefabs) {
+            if(growablesById.ContainsKey(prefab.name)) {
+                prefabsById.Add(prefab.name, prefab);
+                ClientScene.RegisterPrefab(prefab); 
+            }
+        }
     }
 }

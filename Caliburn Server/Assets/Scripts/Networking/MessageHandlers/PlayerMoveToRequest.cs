@@ -23,6 +23,9 @@ public class PlayerMoveToRequest : MessageBase {
         Debug.DrawLine(new Vector3(playerView.transform.position.x, playerView.transform.position.y, 1f), new Vector3(destination.x, destination.y, 1f), Color.red, 2f);
         playerView.destination = destination;
 
+        // Update position.
+        Server.Instance.playerDataByNetId[networkId].destination = destination;
+
         // Make sure the player is able to do this movement.
         NetworkServer.SendToAll<PlayerMoveToRequest>(this);
     }

@@ -6,7 +6,7 @@ using UnityEngine.Networking;
 
 public class ProcessSignup : MonoSingleton<ProcessSignup> {
 
-    const string DB_SIGNUP_URL = "http://localhost/caliburn/signup.php";
+    const string DB_USER_SIGNUP_URL = "http://localhost/caliburn/user_signup.php";
 
     public void Request(string username, string password, string email, Action<int> onComplete = null) {
         StartCoroutine(SignupRequest(username, password, email, onComplete));
@@ -14,9 +14,9 @@ public class ProcessSignup : MonoSingleton<ProcessSignup> {
     
     IEnumerator SignupRequest(string username, string password, string email, Action<int> onComplete = null) {
 
-        Dictionary<string, string> parameters = new Dictionary<string, string>(){ { "uid", username }, { "password", password }, { "email", email } };
+        Dictionary<string, string> parameters = new Dictionary<string, string>(){ { "unique_id", username }, { "password", password }, { "email", email } };
 
-        using(UnityWebRequest signupRequest = UnityWebRequest.Post(DB_SIGNUP_URL, parameters)) {
+        using(UnityWebRequest signupRequest = UnityWebRequest.Post(DB_USER_SIGNUP_URL, parameters)) {
             yield return signupRequest.SendWebRequest();
             
             int requestCode = 4;

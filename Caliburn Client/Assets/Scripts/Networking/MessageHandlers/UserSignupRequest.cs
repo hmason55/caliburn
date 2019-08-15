@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using UnityEngine;
 using Mirror;
 
 public class UserSignupRequest : MessageBase {
@@ -6,17 +8,17 @@ public class UserSignupRequest : MessageBase {
     public string email;
     public int requestCode;
 
-    public override void Deserialize(NetworkReader reader) {
-        username = reader.ReadString();
-        password = reader.ReadString();
-        email = reader.ReadString();
-        requestCode = reader.ReadPackedInt32();
-    }
-
-    public override void Serialize(NetworkWriter writer) {
-        writer.WriteString(username);
-        writer.WriteString(password);
-        writer.WriteString(email);
-        writer.WritePackedInt32(requestCode);
+    public void HandleRequest() {
+        string passwordRaw = password;
+        
+        using(MD5 md5Hash = MD5.Create()) {
+            string hash = Hashing.GetMd5Hash(md5Hash, passwordRaw);
+            if(Hashing.VerifyMd5Hash(md5Hash, passwordRaw, hash)) {
+                password = hash;
+                NetworkClient.Send<UserSignupRequest>(this);
+            } else {
+                Debug.Log("Hashes are different.");
+            }
+        }
     }
 }

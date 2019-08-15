@@ -7,9 +7,9 @@ using Mirror;
 
 public class InventoryView : MonoSingleton<InventoryView> {
 
-    const float minimumWidth = 248f;
+    const float minimumWidth = 256f;
     const float maximumWidth = 728f;
-    const float minimumHeight = 172f;
+    const float minimumHeight = 152f;
     const float maximumHeight = 460f;
     public RectTransform rectTransform;
     InventoryPanel inventoryPanel;

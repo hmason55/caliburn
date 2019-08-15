@@ -19,7 +19,22 @@ public class PlayerDataSyncMessage : IMessageBase  {
     }
 
     public void HandleRequestReceived(NetworkConnection connection) {
-        HandleRequest(connection);
+        foreach(KeyValuePair<uint, PlayerData>  playerData in Server.Instance.playerDataByNetId) {
+            
+            PlayerView playerView = NetworkIdentity.spawned[playerData.Key].GetComponent<PlayerView>();
+
+            PlayerDataSyncMessage playerDataMessage = new PlayerDataSyncMessage {
+                networkId = playerData.Key,
+                connectionId = playerData.Value.connectionId,
+                username = playerData.Value.username,
+                ipAddress = playerData.Value.ipAddress,
+                position = (Vector2)playerView.transform.position,
+                destination = playerData.Value.destination,
+            };
+
+            // Send to target client.
+            playerDataMessage.HandleRequest(connection);
+        }
     }
 
     public void Deserialize(NetworkReader reader) {

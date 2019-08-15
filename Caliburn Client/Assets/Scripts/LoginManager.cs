@@ -88,8 +88,11 @@ public class LoginManager : MonoSingleton<LoginManager> {
             Debug.Log("One or more fields are invalid.");
             return;
         }
-
-        client.Login(usernameLoginField.text, passwordLoginField.text);
+        UserLoginRequest loginRequest = new UserLoginRequest {
+            username = usernameLoginField.text,
+            password = passwordLoginField.text
+        };
+        loginRequest.HandleRequest();
 
         OnHideLoginGroup();
         backButton.gameObject.SetActive(false);
@@ -110,7 +113,12 @@ public class LoginManager : MonoSingleton<LoginManager> {
             return;
         }
 
-        client.Signup(usernameSignupField.text, passwordSignupField.text, confirmSignupField.text, emailSignupField.text);
+        UserSignupRequest userSignup = new UserSignupRequest {
+            username = usernameSignupField.text,
+            password = passwordSignupField.text,
+            email = emailSignupField.text,
+        };
+        userSignup.HandleRequest();
 
         OnHideSignupGroup();
         backButton.gameObject.SetActive(false);

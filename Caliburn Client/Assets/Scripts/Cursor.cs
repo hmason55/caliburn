@@ -67,6 +67,16 @@ public class Cursor : MonoSingleton<Cursor> {
                     allowAction = false;
                 }
             break;
+
+            case "water":
+                gameObject.layer = LayerMask.NameToLayer("Growable");
+                proximityCollisions = false;
+                if( growable == 1 && terrain == 0) {
+                    allowAction = true;
+                } else {
+                    allowAction = false;
+                }
+            break;
         }
 
         if(allowAction) {
@@ -114,6 +124,34 @@ public class Cursor : MonoSingleton<Cursor> {
         proximityCollisions = false;
     }
 
+    public void Water() {
+        if(!allowAction) {
+            Debug.Log("Can't water here.");
+            return;
+        }
+
+        foreach(GameObject go in collisions) {
+            PlantView plantView = go.GetComponent<PlantView>();
+            if(plantView != null) {
+                plantView.Water();
+            }
+        }
+    }
+
+    public void Plant(Item item) {
+        if(!allowAction) {
+            Debug.Log("Can't plant here.");
+            return;
+        }
+
+        PlayerSpawnGrowableRequest spawnGrowableRequest = new PlayerSpawnGrowableRequest {
+            growableId = "Daisy",
+            position = (Vector2)transform.position,
+        };
+
+        spawnGrowableRequest.HandleRequest();
+    }
+
     public void Till() {
         if(!allowAction) {
             Debug.Log("Can't till here.");
@@ -127,19 +165,6 @@ public class Cursor : MonoSingleton<Cursor> {
         spawnSoilRequest.HandleRequest();
     }
 
-    public void Plant(Item item) {
-        if(!allowAction) {
-            Debug.Log("Can't plant here.");
-            return;
-        }
-
-        PlayerSpawnGrowableRequest spawnGrowableRequest = new PlayerSpawnGrowableRequest {
-            growableId = 0,
-            position = (Vector2)transform.position,
-        };
-
-        spawnGrowableRequest.HandleRequest();
-    }
 
     public void Destroy() {
         if(collisions.Count != 1) {
