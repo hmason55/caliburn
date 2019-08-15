@@ -1,1 +1,1 @@
-## Project Caliburn is a multiplayer prototype created in the Unity engine.
+## Project Caliburn is a multiplayer farming game prototype created in the Unity engine.
